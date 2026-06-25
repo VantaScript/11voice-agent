@@ -10,6 +10,7 @@ def main() -> None:
     print(f"  tts_model:         {s.tts_model}")
     print(f"  tts_output_format: {s.tts_output_format}")
     print(f"  stt_model:         {s.stt_model}")
+    print(f"  stt_realtime_model:{s.stt_realtime_model}")
     print(f"  output_dir:        {s.output_dir}")
     print(f"  default_speech:    {s.default_speech_path}")
 

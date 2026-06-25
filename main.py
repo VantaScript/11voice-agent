@@ -17,12 +17,17 @@ from agents.errors import (
     ValidationError,
 )
 from agents.pipeline import roundtrip
+from agents.streaming import run_realtime_transcribe_file, stream_text_to_file
 from agents.stt_agent import speech_to_text
 from agents.tts_agent import text_to_speech
 
 
 def cmd_tts(args: argparse.Namespace) -> int:
-    path = text_to_speech(args.text, output_path=args.output)
+    path = text_to_speech(
+        args.text,
+        output_path=args.output,
+        output_format=args.output_format,
+    )
     print(f"Saved audio to: {path}")
     return 0
 
@@ -49,6 +54,7 @@ def cmd_config(_: argparse.Namespace) -> int:
     print(f"  tts_model:         {s.tts_model}")
     print(f"  tts_output_format: {s.tts_output_format}")
     print(f"  stt_model:         {s.stt_model}")
+    print(f"  stt_realtime_model:{s.stt_realtime_model}")
     print(f"  output_dir:        {s.output_dir}")
     print(f"  default_speech:    {s.default_speech_path}")
     return 0
@@ -77,6 +83,33 @@ def cmd_test(_: argparse.Namespace) -> int:
     return run_all()
 
 
+def cmd_stream_tts(args: argparse.Namespace) -> int:
+    total = 0
+
+    def on_chunk(size: int) -> None:
+        nonlocal total
+        total += size
+        print(f"\r  streaming… {total:,} bytes", end="", flush=True)
+
+    path = stream_text_to_file(args.text, output_path=args.output, on_chunk=on_chunk)
+    print(f"\nSaved audio to: {path}")
+    return 0
+
+
+def cmd_stream_stt(args: argparse.Namespace) -> int:
+    def on_partial(text: str) -> None:
+        if text:
+            print(f"\r  partial: {text}", end="", flush=True)
+
+    transcript = run_realtime_transcribe_file(
+        args.audio,
+        language_code=args.language,
+        on_partial=on_partial if args.partials else None,
+    )
+    print(f"\n{transcript}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     settings = get_settings()
     parser = argparse.ArgumentParser(
@@ -86,6 +119,8 @@ def build_parser() -> argparse.ArgumentParser:
         '  python main.py tts "Hello world"\n'
         "  python main.py stt output/speech.mp3\n"
         '  python main.py roundtrip "Test transcription"\n'
+        '  python main.py stream-tts "Low latency speech"\n'
+        "  python main.py stream-stt output/speech.mp3\n"
         "  python main.py test\n"
         "  python main.py config",
     )
@@ -98,7 +133,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         type=Path,
         default=settings.default_speech_path,
-        help=f"Output MP3 path (default: {settings.default_speech_path})",
+        help=f"Output path (default: {settings.default_speech_path})",
+    )
+    tts.add_argument(
+        "--format",
+        dest="output_format",
+        help="Audio format, e.g. mp3_44100_128 or pcm_16000",
     )
     tts.set_defaults(func=cmd_tts)
 
@@ -137,6 +177,31 @@ def build_parser() -> argparse.ArgumentParser:
     )
     rt.set_defaults(func=cmd_roundtrip)
 
+    stts = sub.add_parser("stream-tts", help="Stream TTS audio chunks (low latency)")
+    stts.add_argument("text", help="Text to speak")
+    stts.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=settings.output_dir / "stream_tts.mp3",
+        help=f"Output MP3 path (default: {settings.output_dir / 'stream_tts.mp3'})",
+    )
+    stts.set_defaults(func=cmd_stream_tts)
+
+    ssts = sub.add_parser("stream-stt", help="Realtime STT via WebSocket")
+    ssts.add_argument("audio", help="Path to audio file")
+    ssts.add_argument(
+        "-l",
+        "--language",
+        help="Language hint, e.g. eng (auto-detect if omitted)",
+    )
+    ssts.add_argument(
+        "--partials",
+        action="store_true",
+        help="Print partial transcripts as they arrive",
+    )
+    ssts.set_defaults(func=cmd_stream_stt)
+
     test = sub.add_parser("test", help="Run integration tests")
     test.set_defaults(func=cmd_test)
 
@@ -171,6 +236,9 @@ def main() -> int:
         return args.func(args)
     except AgentError as err:
         return _report_error(err)
+    except RuntimeError as err:
+        print(f"Error: {err}", file=sys.stderr)
+        return 1
     except KeyboardInterrupt:
         print("\nInterrupted.", file=sys.stderr)
         return 130
