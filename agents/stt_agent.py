@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agents.client import get_client
-
-DEFAULT_MODEL_ID = "scribe_v2"
+from agents.config import get_settings
 
 
 @dataclass
@@ -20,7 +19,7 @@ class TranscriptionResult:
 def speech_to_text(
     audio_path: str | Path,
     *,
-    model_id: str = DEFAULT_MODEL_ID,
+    model_id: str | None = None,
     language_code: str | None = None,
     diarize: bool = False,
     tag_audio_events: bool = False,
@@ -34,11 +33,12 @@ def speech_to_text(
     if not path.is_file():
         raise FileNotFoundError(f"Audio file not found: {path}")
 
+    settings = get_settings()
     client = get_client()
     with path.open("rb") as audio_file:
         result = client.speech_to_text.convert(
             file=audio_file,
-            model_id=model_id,
+            model_id=model_id or settings.stt_model,
             language_code=language_code,
             diarize=diarize,
             tag_audio_events=tag_audio_events,

@@ -8,7 +8,7 @@ Step-by-step agents using [ElevenLabs API](https://elevenlabs.io/docs/overview/i
 | 2 | Shared ElevenLabs client ✅ |
 | 3 | TTS agent (text → speech) ✅ |
 | 4 | STT agent (speech → text) ✅ |
-| 5 | Config & defaults |
+| 5 | Config & defaults ✅ |
 | 6 | CLI entry point |
 | 7 | End-to-end pipeline (TTS → STT round-trip) |
 | 8 | Error handling |
@@ -23,6 +23,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # add your key
 PYTHONPATH=. python scripts/verify_client.py
+PYTHONPATH=. python scripts/show_config.py
 python main.py tts "Hello from ElevenLabs"
 python main.py stt path/to/audio.mp3
 python main.py roundtrip "Test round-trip transcription"

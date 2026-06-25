@@ -3,20 +3,16 @@
 from pathlib import Path
 
 from agents.client import get_client
-
-# "George" — browse more at https://elevenlabs.io/app/voice-library
-DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"
-DEFAULT_MODEL_ID = "eleven_flash_v2_5"
-DEFAULT_OUTPUT_FORMAT = "mp3_44100_128"
+from agents.config import get_settings
 
 
 def text_to_speech(
     text: str,
     *,
-    output_path: str | Path = "output/speech.mp3",
-    voice_id: str = DEFAULT_VOICE_ID,
-    model_id: str = DEFAULT_MODEL_ID,
-    output_format: str = DEFAULT_OUTPUT_FORMAT,
+    output_path: str | Path | None = None,
+    voice_id: str | None = None,
+    model_id: str | None = None,
+    output_format: str | None = None,
 ) -> Path:
     """
     Convert text to speech and save as an audio file.
@@ -26,15 +22,16 @@ def text_to_speech(
     if not text.strip():
         raise ValueError("Text cannot be empty.")
 
-    out = Path(output_path)
+    settings = get_settings()
+    out = Path(output_path or settings.default_speech_path)
     out.parent.mkdir(parents=True, exist_ok=True)
 
     client = get_client()
     audio_stream = client.text_to_speech.convert(
-        voice_id=voice_id,
+        voice_id=voice_id or settings.voice_id,
         text=text,
-        model_id=model_id,
-        output_format=output_format,
+        model_id=model_id or settings.tts_model,
+        output_format=output_format or settings.tts_output_format,
     )
 
     with out.open("wb") as f:
