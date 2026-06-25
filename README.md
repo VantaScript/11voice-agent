@@ -10,8 +10,8 @@ Step-by-step agents using [ElevenLabs API](https://elevenlabs.io/docs/overview/i
 | 4 | STT agent (speech → text) ✅ |
 | 5 | Config & defaults ✅ |
 | 6 | CLI entry point ✅ |
-| 7 | End-to-end pipeline (TTS → STT round-trip) |
-| 8 | Error handling |
+| 7 | End-to-end pipeline (TTS → STT round-trip) ✅ |
+| 8 | Error handling ✅ |
 | 9 | Test the agents |
 | 10 | Next steps (streaming, realtime) |
 

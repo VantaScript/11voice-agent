@@ -3,8 +3,11 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from elevenlabs.core.api_error import ApiError
+
 from agents.client import get_client
 from agents.config import get_settings
+from agents.errors import AudioNotFoundError, wrap_api_error
 
 
 @dataclass
@@ -31,18 +34,21 @@ def speech_to_text(
     """
     path = Path(audio_path)
     if not path.is_file():
-        raise FileNotFoundError(f"Audio file not found: {path}")
+        raise AudioNotFoundError(f"Audio file not found: {path}")
 
     settings = get_settings()
     client = get_client()
-    with path.open("rb") as audio_file:
-        result = client.speech_to_text.convert(
-            file=audio_file,
-            model_id=model_id or settings.stt_model,
-            language_code=language_code,
-            diarize=diarize,
-            tag_audio_events=tag_audio_events,
-        )
+    try:
+        with path.open("rb") as audio_file:
+            result = client.speech_to_text.convert(
+                file=audio_file,
+                model_id=model_id or settings.stt_model,
+                language_code=language_code,
+                diarize=diarize,
+                tag_audio_events=tag_audio_events,
+            )
+    except ApiError as err:
+        raise wrap_api_error(err) from err
 
     return TranscriptionResult(
         text=result.text,
