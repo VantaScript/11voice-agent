@@ -12,7 +12,7 @@ Step-by-step agents using [ElevenLabs API](https://elevenlabs.io/docs/overview/i
 | 6 | CLI entry point ✅ |
 | 7 | End-to-end pipeline (TTS → STT round-trip) ✅ |
 | 8 | Error handling ✅ |
-| 9 | Test the agents |
+| 9 | Test the agents ✅ |
 | 10 | Next steps (streaming, realtime) |
 
 ## Quick start
@@ -28,4 +28,5 @@ python main.py config
 python main.py tts "Hello from ElevenLabs"
 python main.py stt output/speech.mp3
 python main.py roundtrip "Test round-trip transcription"
+python main.py test
 ```

@@ -71,6 +71,12 @@ def cmd_roundtrip(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_test(_: argparse.Namespace) -> int:
+    from scripts.run_tests import run_all
+
+    return run_all()
+
+
 def build_parser() -> argparse.ArgumentParser:
     settings = get_settings()
     parser = argparse.ArgumentParser(
@@ -80,6 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
         '  python main.py tts "Hello world"\n'
         "  python main.py stt output/speech.mp3\n"
         '  python main.py roundtrip "Test transcription"\n'
+        "  python main.py test\n"
         "  python main.py config",
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -129,6 +136,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="Language hint for STT, e.g. eng (auto-detect if omitted)",
     )
     rt.set_defaults(func=cmd_roundtrip)
+
+    test = sub.add_parser("test", help="Run integration tests")
+    test.set_defaults(func=cmd_test)
 
     config = sub.add_parser("config", help="Show active settings")
     config.set_defaults(func=cmd_config)
