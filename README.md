@@ -7,7 +7,7 @@ Step-by-step agents using [ElevenLabs API](https://elevenlabs.io/docs/overview/i
 | 1 | Project setup & API key |
 | 2 | Shared ElevenLabs client ✅ |
 | 3 | TTS agent (text → speech) ✅ |
-| 4 | STT agent (speech → text) |
+| 4 | STT agent (speech → text) ✅ |
 | 5 | Config & defaults |
 | 6 | CLI entry point |
 | 7 | End-to-end pipeline (TTS → STT round-trip) |
